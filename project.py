@@ -1,9 +1,9 @@
 # Header
 print('')
 print('Script Name:             | project.py 101')
-print('File Date:               | 2017-12')
+print('File Date:               | 2018-3')
 print('Author:                  | Chris Fong')
-print('Version:                 | 0.1')
+print('Version:                 | 0.2')
 print('Python Version:          | 3.x')
 print('Tab:                     | 4 spaces')
 print('Library Dependencies:    | netmiko; csv; getpass')
@@ -14,6 +14,10 @@ print('')
 
 '''
 README:
+
+Doing more testing
+
+And more testing
 
 Expected CSV Headers/Columns
 HOSTNAME,IP_ADDRESS,IOS_TYPE
@@ -90,7 +94,7 @@ def r_cvs_file():
 
 
 def main():
-    print ('') 
+    print ('')
     print ('')
     r_cvs_file()
     exit()
