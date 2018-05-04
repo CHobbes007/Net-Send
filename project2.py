@@ -8,7 +8,7 @@ print('Python Version:          | 3.x')
 print('Tab:                     | 4 spaces')
 print('Library Dependencies:    | netmiko; csv; getpass')
 print('Special Thanks-')
-print('Tim Grabrian')
+print('Tim G')
 print('')
 # End Header
 
@@ -18,7 +18,7 @@ print('')
 README:
 
 Expected CSV Headers/Columns
-HOSTNAME,IP_ADDRESS,IOS_TYPE
+Node_Name,IP_Address,Device_Type
 
 This project assumes a Windows OS to make relative folder paths for saving
 output.
@@ -166,10 +166,15 @@ def run_cmd(command, prompt, connection, quiet=False, show_prompt=True,
 #
 # def run_pair_cmds():
 
-
+# Create directories for a Node
+def create_folder(hostname):
+    path = os.getcwd()
+    newdir = os.path.join(path, 'OutputConfigurations', hostname)
+    os.makedirs(newdir)
+    return newdir
 
 # Open CSV file with DictReader
-def read_csv_file(command):
+def read_csv_file(commands):
     with open(file_name, mode='r') as csvfile:
         readCSV = csv.DictReader(csvfile)
         for row in readCSV:
@@ -184,7 +189,7 @@ def read_csv_file(command):
             # print(username)
             # print(p)
             # print(ep)
-
+            create_folder(hostname)
             node = {
                 'device_type': device,
                 'ip': ip_addr,
@@ -198,20 +203,16 @@ def read_csv_file(command):
             print('\n#######################################\n')
             print(">>>>>>>>> {0}".format(row['Node_Name']))
             print(">>>>>>>>> {0}\n".format(row['IP_Address']))
-            # Uncomment below for testing
-            # print(hostname)
-            # print(ip_addr)
-            # print(device)
-            # print(username)
-            # print(p)
-            # print(ep)
-            # print(command)
+
+            # Connect to device
             net_connect = my_connection(hostname, device, ip_addr, username,
             p, ep)
             if not net_connect:
                 continue  # Skip this node due to connection issues.
             prompt = net_connect.find_prompt()
-            run_cmd(command, prompt, net_connect)
+            for command in commands:
+                run_cmd(command, prompt, net_connect)
+            net_connect.disconnect()
             print("\n>>>>>>>>> End <<<<<<<<<\n\n")
 
 
@@ -220,9 +221,12 @@ def read_csv_file(command):
 # Main Appilication
 def main():
     # Enter command below
-    # EXAMPLE: command = 'show ip int br'
-    command = 'show ip int br'
-    read_csv_file(command)
+    # EXAMPLE:
+    # commands = ["dir flash: | include .bin",
+    #             "show run | include boot system",
+    #             "show version | include image file"]
+    commands = ["dir | include .bin", "show run | include boot system", "show version | include image file"]
+    read_csv_file(commands)
     exit()
 
 if __name__ == "__main__":
