@@ -21,7 +21,7 @@ Expected CSV Headers/Columns
 HOSTNAME,IP_ADDRESS,IOS_TYPE
 
 This project assumes a Windows OS to make relative folder paths for saving
-output.  
+output.
 
 '''
 
@@ -219,6 +219,8 @@ def read_csv_file(command):
 
 # Main Appilication
 def main():
+    # Enter command below
+    # EXAMPLE: command = 'show ip int br'
     command = 'show ip int br'
     read_csv_file(command)
     exit()
