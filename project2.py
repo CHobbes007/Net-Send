@@ -161,7 +161,7 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
     if show_prompt and not quiet:
         print(prompt + " " + command)  # Echo prompt and executed command
         path = os.getcwd()
-        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+        file_name = os.path.join(path, "OutputConfigurations", hostname, hostname+".txt")
         f=open(file_name, 'a')
         f.write(prompt + " " + command)
         f.write('\n')
@@ -171,7 +171,7 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
     if not quiet:
         print(output)  # Echo output of command executed
         path = os.getcwd()
-        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+        file_name = os.path.join(path, "OutputConfigurations", hostname, hostname+".txt")
         f=open(file_name, 'a')
         f.write(output)
         f.write('\n')
