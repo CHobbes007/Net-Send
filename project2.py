@@ -24,11 +24,10 @@ output.
 
 
 TO DO
-Log to file
 Add timestamps
 Multithreading
-Store Output into separate
-
+If path or folder exists, do not create
+write to file  - functionize
 
 Special Thanks - tgrabrian and ktbyers
 
