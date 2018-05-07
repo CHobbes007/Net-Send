@@ -28,6 +28,8 @@ Add timestamps
 Multithreading
 If path or folder exists, do not create
 write to file  - functionize
+Lots of error handling
+Lots of documentation
 
 Special Thanks - tgrabrian and ktbyers
 
@@ -160,7 +162,7 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
     if show_prompt and not quiet:
         print(prompt + " " + command)  # Echo prompt and executed command
         path = os.getcwd()
-        file_name = os.path.join(path, "OutputConfigurations", hostname, hostname+".txt")
+        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
         f=open(file_name, 'a')
         f.write(prompt + " " + command)
         f.write('\n')
@@ -170,7 +172,7 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
     if not quiet:
         print(output)  # Echo output of command executed
         path = os.getcwd()
-        file_name = os.path.join(path, "OutputConfigurations", hostname, hostname+".txt")
+        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
         f=open(file_name, 'a')
         f.write(output)
         f.write('\n')
@@ -219,8 +221,7 @@ def read_csv_file(commands):
             # print(p)
             # print(ep)
 
-            # TO DO
-            create_folder(hostname)
+            # create_folder(hostname)
             node = {
                 'device_type': device,
                 'ip': ip_addr,
@@ -256,7 +257,7 @@ def main():
     # commands = ["dir flash: | include .bin",
     #             "show run | include boot system",
     #             "show version | include image file"]
-    commands = ["show run", "show version", "show cdp nei", "show cdp nei de", "show ip int br", "show interface"]
+    commands = ["show int | i proto|Last in"]
     read_csv_file(commands)
     exit()
 
