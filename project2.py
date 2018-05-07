@@ -6,9 +6,8 @@ print('Author:                  | Chris Fong')
 print('Version:                 | 0.1')
 print('Python Version:          | 3.x')
 print('Tab:                     | 4 spaces')
-print('Library Dependencies:    | netmiko; csv; getpass')
-print('Special Thanks-')
-print('Tim G')
+print('Library Dependencies:    | netmiko; csv; getpass, os')
+print('')
 print('')
 # End Header
 
@@ -23,7 +22,19 @@ Node_Name,IP_Address,Device_Type
 This project assumes a Windows OS to make relative folder paths for saving
 output.
 
+
+TO DO
+Log to file
+Add timestamps
+Multithreading
+Store Output into separate
+
+
+Special Thanks - tgrabrian and ktbyers
+
 '''
+
+
 
 # Import Library Dependencies
 import getpass
@@ -124,7 +135,7 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
 
 
 # Define single command
-def run_cmd(command, prompt, connection, quiet=False, show_prompt=True,
+def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True,
             delay_factor=1):
     """
     Runs a single command on a device and displays output.
@@ -143,16 +154,28 @@ def run_cmd(command, prompt, connection, quiet=False, show_prompt=True,
         output = connection.send_command(command, delay_factor=delay_factor)
     except IOError:
         # Seen when delay not long enough
-        print_err("send_command(" + command + ") IOError!")
+        print("send_command(" + command + ") IOError!")
         return  # Skip additional output.
     # endtry
 
     if show_prompt and not quiet:
         print(prompt + " " + command)  # Echo prompt and executed command
+        path = os.getcwd()
+        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+        f=open(file_name, 'a')
+        f.write(prompt + " " + command)
+        f.write('\n')
+        f.close()
     # endif
 
     if not quiet:
         print(output)  # Echo output of command executed
+        path = os.getcwd()
+        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+        f=open(file_name, 'a')
+        f.write(output)
+        f.write('\n')
+        f.close()
     # endif
 
     return output  # Return output of executed command
@@ -173,6 +196,13 @@ def create_folder(hostname):
     os.makedirs(newdir)
     return newdir
 
+# def to_doc_a(hostname, output):
+#     f=open(hostname, 'a')
+#     f.write(output)
+#     f.write('\n')
+#     f.close()
+#     print("Output file written")
+
 # Open CSV file with DictReader
 def read_csv_file(commands):
     with open(file_name, mode='r') as csvfile:
@@ -189,6 +219,8 @@ def read_csv_file(commands):
             # print(username)
             # print(p)
             # print(ep)
+
+            # TO DO
             create_folder(hostname)
             node = {
                 'device_type': device,
@@ -211,7 +243,7 @@ def read_csv_file(commands):
                 continue  # Skip this node due to connection issues.
             prompt = net_connect.find_prompt()
             for command in commands:
-                run_cmd(command, prompt, net_connect)
+                run_cmd(command, prompt, net_connect, hostname)
             net_connect.disconnect()
             print("\n>>>>>>>>> End <<<<<<<<<\n\n")
 
@@ -225,7 +257,7 @@ def main():
     # commands = ["dir flash: | include .bin",
     #             "show run | include boot system",
     #             "show version | include image file"]
-    commands = ["dir | include .bin", "show run | include boot system", "show version | include image file"]
+    commands = ["show run", "show version", "show cdp nei", "show cdp nei de", "show ip int br", "show interface"]
     read_csv_file(commands)
     exit()
 
