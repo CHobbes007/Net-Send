@@ -205,7 +205,7 @@ def run_en_cmds(command, prompt, connection, hostname, quiet=False, show_prompt=
     """
 
     try:
-        output = connection.send_command(command, delay_factor=delay_factor)
+        output = connection.send_config_set(command, delay_factor=delay_factor)
     except IOError:
         # Seen when delay not long enough
         print("send_command(" + command + ") IOError!")
@@ -250,7 +250,7 @@ def create_folder(hostname):
 #     print("Output file written")
 
 # Open CSV file with DictReader
-def read_csv_file(commands):
+def read_csv_file():
     with open(file_name, mode='r') as csvfile:
         readCSV = csv.DictReader(csvfile)
         for row in readCSV:
@@ -260,30 +260,24 @@ def read_csv_file(commands):
             commands = row['Commands']
             global_config_commands = row['Global_Config_Commands']
 
-            # create_folder(hostname)
-            node = {
-                'device_type': device,
-                'ip': ip_addr,
-                'username': username,
-                'password': p,
-                'secret': ep,
-                'verbose': False,
-            }
-
             # Print for readability
             print('\n#######################################\n')
             print(">>>>>>>>> {0}".format(row['Node_Name']))
             print(">>>>>>>>> {0}\n".format(row['IP_Address']))
+            print(">>>>>>>>> {0}".format(row['Commands']))
+            print(">>>>>>>>> {0}".format(row['Global_Config_Commands']))
 
             # Connect to device
-            net_connect = my_connection(hostname, device, ip_addr, username,
-            p, ep)
+            net_connect = my_connection(hostname, device, ip_addr, username, p, ep)
             if not net_connect:
-                continue  # Skip this node due to connection issues.
+                continue # Skip this node due to connection issues.
             prompt = net_connect.find_prompt()
             for command in commands:
+                print(command)
+                print(commands)
                 run_cmd(command, prompt, net_connect, hostname)
             for command in global_config_commands:
+                print(command)
                 run_en_cmds(command, prompt, net_connect, hostname)
             net_connect.disconnect()
             print("\n>>>>>>>>> End <<<<<<<<<\n\n")
@@ -301,7 +295,7 @@ def main():
     # commands = ["show cdp nei | in wap|AIR", "show cdp nei de | in IP|Device",
     #             "show ip int br", "show run | sec standby",
     #             "show interface status", "show mac address-table"]
-    read_csv_file(commands)
+    read_csv_file()
     exit()
 
 if __name__ == "__main__":
