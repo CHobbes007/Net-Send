@@ -1,7 +1,7 @@
 # Header
 print('')
 print('Script Name:             | project.py 101')
-print('File Date:               | 2017-11')
+print('File Date:               | 2018-05')
 print('Author:                  | Chris Fong')
 print('Version:                 | 0.1')
 print('Python Version:          | 3.x')
@@ -23,14 +23,16 @@ This project assumes a Windows OS to make relative folder paths for saving
 output.
 
 
+
 TO DO
 Add timestamps
 Multithreading
 If path or folder exists, do not create
 write to file  - functionize
 Lots of error handling
+    Print Error to Error Log
 Lots of documentation
-
+Print an error status
 Special Thanks - tgrabrian and ktbyers
 
 '''
@@ -187,7 +189,50 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
 # def run_en_cmd():
 #
 # def run_en_cmds():
-#
+def run_en_cmds(command, prompt, connection, hostname, quiet=False, show_prompt=True,
+            delay_factor=1):
+    """
+    Runs a single command on a device and displays output.
+    Args:
+        command         string - Command to execute
+        prompt          string - Device prompt (typically hostname#)
+        connection      object - Connection to device (NetMiko)
+        quiet           bool - Hide command output? Defaults to False
+        show_prompt     bool - Echo the prompt/command? Defaults to true
+        delay_factor    int - Change timeout of command-run. Defaults to 1.
+    Returns:
+        Output of command
+    """
+
+    try:
+        output = connection.send_command(command, delay_factor=delay_factor)
+    except IOError:
+        # Seen when delay not long enough
+        print("send_command(" + command + ") IOError!")
+        return  # Skip additional output.
+    # endtry
+
+    if show_prompt and not quiet:
+        print(prompt + " " + command)  # Echo prompt and executed command
+        path = os.getcwd()
+        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+        f=open(file_name, 'a')
+        f.write(prompt + " " + command)
+        f.write('\n')
+        f.close()
+    # endif
+
+    if not quiet:
+        print(output)  # Echo output of command executed
+        path = os.getcwd()
+        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+        f=open(file_name, 'a')
+        f.write(output)
+        f.write('\n')
+        f.close()
+    # endif
+
+    return output  # Return output of executed command
 # def run_pair_cmds():
 
 # Create directories for a Node
@@ -212,14 +257,8 @@ def read_csv_file(commands):
             hostname = row['Node_Name']
             ip_addr = row['IP_Address']
             device = row['Device_Type']
-
-            # Uncomment below for testing
-            # print(hostname)
-            # print(ip_addr)
-            # print(device)
-            # print(username)
-            # print(p)
-            # print(ep)
+            commands = row['Commands']
+            global_config_commands = row['Global_Config_Commands']
 
             # create_folder(hostname)
             node = {
@@ -244,6 +283,8 @@ def read_csv_file(commands):
             prompt = net_connect.find_prompt()
             for command in commands:
                 run_cmd(command, prompt, net_connect, hostname)
+            for command in global_config_commands:
+                run_en_cmds(command, prompt, net_connect, hostname)
             net_connect.disconnect()
             print("\n>>>>>>>>> End <<<<<<<<<\n\n")
 
@@ -257,9 +298,9 @@ def main():
     # commands = ["dir flash: | include .bin",
     #             "show run | include boot system",
     #             "show version | include image file"]
-    commands = ["show cdp nei | in wap|AIR", "show cdp nei de | in IP|Device",
-                "show ip int br", "show run | sec standby",
-                "show interface status", "show mac address-table"]
+    # commands = ["show cdp nei | in wap|AIR", "show cdp nei de | in IP|Device",
+    #             "show ip int br", "show run | sec standby",
+    #             "show interface status", "show mac address-table"]
     read_csv_file(commands)
     exit()
 
