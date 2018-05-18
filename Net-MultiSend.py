@@ -6,7 +6,7 @@ print('Author:                  | Chris Fong')
 print('Version:                 | 0.1')
 print('Python Version:          | 3.x')
 print('Tab:                     | 4 spaces')
-print('Library Dependencies:    | netmiko; csv; getpass, os')
+print('Library Dependencies:    | netmiko; csv; getpass, os, datetime')
 print('')
 print('')
 # End Header
@@ -15,14 +15,20 @@ print('')
 
 '''
 README:
+Example Local Path: inventory.csv
+Example Windows Relative Path: CSV_Input\inventory.csv
 
-Expected CSV Headers/Columns
-Node_Name,IP_Address,Device_Type
+CSV Headers:
+Node_Name,IP_Address,Device_Type,Commands,Global_Config_Commands
+
+Example Commands:
+show run,show ver | in image
+
+Example Global_Config_Commands:
+do wr mem,int gi0/0,description Test Description
 
 This project assumes a Windows OS to make relative folder paths for saving
 output.
-
-
 
 TO DO
 Add timestamps
@@ -43,9 +49,11 @@ Special Thanks - tgrabrian and ktbyers
 import getpass
 import csv
 import os
+from datetime import datetime
 
 from netmiko import ConnectHandler
 from paramiko.ssh_exception import SSHException
+from paramiko.buffered_pipe import PipeTimeout
 from netmiko.ssh_exception import NetMikoTimeoutException
 from netmiko.ssh_exception import NetMikoAuthenticationException
 
@@ -78,13 +86,20 @@ else:
 print ('')
 print ('')
 print('#######################################')
-print('Example Local Path: ')
-print('inventory.csv')
-print('Example Windows Relative Path: ')
-print('CSV_Input\inventory.csv')
+print('Example Local Path: inventory.csv')
+print('Example Windows Relative Path: CSV_Input\inventory.csv')
+print('')
 print('CSV Headers:')
-print('Node_Name,IP_Address,Device_Type')
+print('Node_Name,IP_Address,Device_Type,Commands,Global_Config_Commands')
+print('')
+print('Example Commands:')
+print('show run,show ver | in image')
+print('')
+print('Example Global_Config_Commands:')
+print('do wr mem,int gi0/0,description Test Description')
 print('#######################################')
+print ('')
+print ('')
 file_name=str(input("Please Enter the input CSV file name: "))
 print('Input CSV file:', file_name)
 print ('')
@@ -120,16 +135,73 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
                                     username=username,
                                     password=p, secret=ep)
     except NetMikoTimeoutException:
+        # Print to Console
         print(hostname + " Connection timed out!")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write(hostname + " Connection timed out!")
+        f.write('\n')
+        f.close()
+
         return False
+
     except NetMikoAuthenticationException:
+        # Print to Console
         print(hostname + " Authentication failed!")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write(hostname + " Authentication failed!")
+        f.write('\n')
+        f.close()
+
         return False
-    except NetMikoAuthenticationException:
-        print(hostname + " Authentication failed!")
+
+    except paramiko.buffered_pipe.PipeTimeout:
+        # Print to Console
+        print(hostname + " Command Timed Out")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write(hostname + " Command Timed Out")
+        f.write('\n')
+        f.close()
+
         return False
+
+    except socket.timeout:
+        # Print to Console
+        print(hostname + " Command Timed Out")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write(hostname + " Command Timed Out")
+        f.write('\n')
+        f.close()
+
+        return False
+
     except TimeoutError:
+        # Print to Console
         print(hostname + " Other timeout error!")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write(hostname + " Other timeout error!")
+        f.write('\n')
+        f.close()
+
         return False
     # endtry
 
@@ -158,37 +230,66 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
     except IOError:
         # Seen when delay not long enough
         print("send_command(" + command + ") IOError!")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write('\n')
+        f.write("send_command(" + command + ") IOError!")
+        f.write('\n')
+        f.close()
+
         return  # Skip additional output.
     # endtry
 
     if show_prompt and not quiet:
+        # Print to Console
+        print('\n')
         print(prompt + " " + command)  # Echo prompt and executed command
+
         path = os.getcwd()
+        # Write to invididual log
         file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
         f=open(file_name, 'a')
+        f.write('\n')
+        f.write(prompt + " " + command)
+        f.write('\n')
+        f.close()
+
+        # Write to Log
+        file_log = os.path.join(path, "Log", "log.txt")
+        f=open(file_log, 'a')
+        f.write('\n')
         f.write(prompt + " " + command)
         f.write('\n')
         f.close()
     # endif
 
     if not quiet:
+        # Print to Console
         print(output)  # Echo output of command executed
+
         path = os.getcwd()
+        # Write to invididual log
         file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
         f=open(file_name, 'a')
         f.write(output)
         f.write('\n')
         f.close()
+
+        # Write to Log
+        file_log = os.path.join(path, "Log", "log.txt")
+        f=open(file_log, 'a')
+        f.write(output)
+        f.write('\n')
+        f.close()
+
     # endif
 
     return output  # Return output of executed command
 # enddef
 
-# def run_cmds():
-#
-# def run_en_cmd():
-#
-# def run_en_cmds():
 def run_en_cmds(command, prompt, connection, hostname, quiet=False, show_prompt=True,
             delay_factor=1):
     """
@@ -208,46 +309,66 @@ def run_en_cmds(command, prompt, connection, hostname, quiet=False, show_prompt=
         output = connection.send_config_set(command, delay_factor=delay_factor)
     except IOError:
         # Seen when delay not long enough
+
+        # Print to Console
         print("send_command(" + command + ") IOError!")
+
+        path = os.getcwd()
+        # Write to Error Log
+        file_error = os.path.join(path, "Log", "Error.txt")
+        f=open(file_error, 'a')
+        f.write("send_command(" + command + ") IOError!")
+        f.write('\n')
+        f.close()
+
         return  # Skip additional output.
     # endtry
 
-    if show_prompt and not quiet:
-        print(prompt + " " + command)  # Echo prompt and executed command
-        path = os.getcwd()
-        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
-        f=open(file_name, 'a')
-        f.write(prompt + " " + command)
-        f.write('\n')
-        f.close()
+#    if show_prompt and not quiet:
+#        # Print to Console
+#        print('\n')
+#        print(prompt + " " + command)  # Echo prompt and executed command
+#
+#        path = os.getcwd()
+#        # Write to invididual log
+#        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
+#        f=open(file_name, 'a')
+#        f.write('\n')
+#        f.write(prompt + " " + command)
+#        f.write('\n')
+#        f.close()
+#
+#        # Write to Log
+#        file_log = os.path.join(path, "Log", "log.txt")
+#        f=open(file_log, 'a')
+#        f.write('\n')
+#        f.write(prompt + " " + command)
+#        f.write('\n')
+#        f.close()
+
     # endif
 
     if not quiet:
+        # Print to Console
         print(output)  # Echo output of command executed
+
         path = os.getcwd()
+        # Write to invididual log
         file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
         f=open(file_name, 'a')
+        f.write(output)
+        f.write('\n')
+        f.close()
+
+        # Write to Log
+        file_log = os.path.join(path, "Log", "log.txt")
+        f=open(file_log, 'a')
         f.write(output)
         f.write('\n')
         f.close()
     # endif
 
     return output  # Return output of executed command
-# def run_pair_cmds():
-
-# Create directories for a Node
-def create_folder(hostname):
-    path = os.getcwd()
-    newdir = os.path.join(path, 'OutputConfigurations', hostname)
-    os.makedirs(newdir)
-    return newdir
-
-# def to_doc_a(hostname, output):
-#     f=open(hostname, 'a')
-#     f.write(output)
-#     f.write('\n')
-#     f.close()
-#     print("Output file written")
 
 # Open CSV file with DictReader
 def read_csv_file():
@@ -257,15 +378,43 @@ def read_csv_file():
             hostname = row['Node_Name']
             ip_addr = row['IP_Address']
             device = row['Device_Type']
-            commands = row['Commands']
-            global_config_commands = row['Global_Config_Commands']
+            cmd = row['Commands']
+            cmds = row['Global_Config_Commands']
+            commands = cmd.split(',')
+            global_config_commands = cmds.split(',')
 
             # Print for readability
-            print('\n#######################################\n')
+            print('\n#######################################')
             print(">>>>>>>>> {0}".format(row['Node_Name']))
             print(">>>>>>>>> {0}\n".format(row['IP_Address']))
-            print(">>>>>>>>> {0}".format(row['Commands']))
-            print(">>>>>>>>> {0}".format(row['Global_Config_Commands']))
+            # Timestamp
+            now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print('The time is:')
+            print(now_time)
+            print('#######################################\n')
+
+            path = os.getcwd()
+            # Write to Log
+            file_log = os.path.join(path, "Log", "log.txt")
+            f=open(file_log, 'a')
+            f.write('#######################################\n')
+            f.write('>>>>>>>>> Hostname: ' + hostname + '\n')
+            f.write('>>>>>>>>> IP Address: ' + ip_addr + '\n')
+            f.write('>>>>>>>>> Commands: ' + cmd + '\n')
+            f.write('>>>>>>>>> Global Configuration Commands: ' + cmds + '\n')
+            f.write('#######################################\n')
+            f.close()
+
+            # Write to Error log
+            file_error = os.path.join(path, "Log", "Error.txt")
+            f=open(file_error, 'a')
+            f.write('#######################################\n')
+            f.write('>>>>>>>>> Hostname: ' + hostname + '\n')
+            f.write('>>>>>>>>> IP Address: ' + ip_addr + '\n')
+            f.write('>>>>>>>>> Commands: ' + cmd + '\n')
+            f.write('>>>>>>>>> Global Configuration Commands: ' + cmds + '\n')
+            f.write('#######################################\n')
+            f.close()
 
             # Connect to device
             net_connect = my_connection(hostname, device, ip_addr, username, p, ep)
@@ -273,29 +422,35 @@ def read_csv_file():
                 continue # Skip this node due to connection issues.
             prompt = net_connect.find_prompt()
             for command in commands:
-                print(command)
-                print(commands)
                 run_cmd(command, prompt, net_connect, hostname)
             for command in global_config_commands:
-                print(command)
                 run_en_cmds(command, prompt, net_connect, hostname)
             net_connect.disconnect()
+
             print("\n>>>>>>>>> End <<<<<<<<<\n\n")
 
+            # Write to Log
+            file_log = os.path.join(path, "Log", "log.txt")
+            f=open(file_log, 'a')
+            f.write('\n>>>>>>>>> End <<<<<<<<<\n\n')
+            f.close()
 
-
+            # Write to Error log
+            file_error = os.path.join(path, "Log", "Error.txt")
+            f=open(file_error, 'a')
+            f.write('\n>>>>>>>>> End <<<<<<<<<\n\n')
+            f.close()
 
 # Main Appilication
 def main():
-    # Enter command below
-    # EXAMPLE:
-    # commands = ["dir flash: | include .bin",
-    #             "show run | include boot system",
-    #             "show version | include image file"]
-    # commands = ["show cdp nei | in wap|AIR", "show cdp nei de | in IP|Device",
-    #             "show ip int br", "show run | sec standby",
-    #             "show interface status", "show mac address-table"]
+    # Start Time
+    start_time = datetime.now()
     read_csv_file()
+    end_time = datetime.now()
+    total_time = end_time - start_time
+
+    print("The Total Elapsed Time is:")
+    print(total_time)
     exit()
 
 if __name__ == "__main__":
