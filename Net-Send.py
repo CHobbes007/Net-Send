@@ -123,9 +123,6 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
     except NetMikoAuthenticationException:
         print(hostname + " Authentication failed!")
         return False
-    except NetMikoAuthenticationException:
-        print(hostname + " Authentication failed!")
-        return False
     except TimeoutError:
         print(hostname + " Other timeout error!")
         return False
