@@ -49,6 +49,7 @@ Special Thanks - tgrabrian and ktbyers
 import getpass
 import csv
 import os
+import socket
 from datetime import datetime
 
 from netmiko import ConnectHandler
@@ -162,7 +163,7 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
 
         return False
 
-    except paramiko.buffered_pipe.PipeTimeout:
+    except PipeTimeout:
         # Print to Console
         print(hostname + " Command Timed Out")
 
@@ -176,15 +177,15 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
 
         return False
 
-    except socket.timeout:
+    except timeout:
         # Print to Console
-        print(hostname + " Command Timed Out")
+        print(hostname + " Socket Timed Out")
 
         path = os.getcwd()
         # Write to Error Log
         file_error = os.path.join(path, "Log", "Error.txt")
         f=open(file_error, 'a')
-        f.write(hostname + " Command Timed Out")
+        f.write(hostname + " Socket Timed Out")
         f.write('\n')
         f.close()
 
@@ -423,8 +424,12 @@ def read_csv_file():
             prompt = net_connect.find_prompt()
             for command in commands:
                 run_cmd(command, prompt, net_connect, hostname)
-            for command in global_config_commands:
-                run_en_cmds(command, prompt, net_connect, hostname)
+            # for command in global_config_commands:
+            #     run_en_cmds(command, prompt, net_connect, hostname)
+            # for command in global_config_commands:
+            # test_cmds = ['do show ip int br','do show ver | in image','do show ver | in system','do wr mem']
+            # run_en_cmds(test_cmds, prompt, net_connect, hostname)
+            run_en_cmds(global_config_commands, prompt, net_connect, hostname)
             net_connect.disconnect()
 
             print("\n>>>>>>>>> End <<<<<<<<<\n\n")
