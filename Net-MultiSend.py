@@ -51,7 +51,6 @@ import csv
 import os
 import socket
 from datetime import datetime
-
 from netmiko import ConnectHandler
 from paramiko.ssh_exception import SSHException
 from paramiko.buffered_pipe import PipeTimeout
@@ -64,7 +63,7 @@ from netmiko.ssh_exception import NetMikoAuthenticationException
 # Input CSV
 #######################################
 
-username = str(input("Please Enter your username: "))
+username = str(input('Please Enter your username: '))
 print('The username you entered was: ', username)
 
 # Input password without echoing password
@@ -75,15 +74,17 @@ except Exception as error:
 else:
     print('Password has been accepted.')
 
-# Input Enable password without echoing passwor
+# Input Enable password without echoing password
 try:
     ep = getpass.getpass(prompt='Please enter your Enable password: ')
 except Exception as error:
     print('ERROR: No Enable password entered', error)
 else:
     print('Enable Password has been accepted.')
+# endif
 
-# Input CSV File Name
+
+# Self Documentation
 print ('')
 print ('')
 print('#######################################')
@@ -97,15 +98,18 @@ print('Example Commands:')
 print('show run,show ver | in image')
 print('')
 print('Example Global_Config_Commands:')
-print('do wr mem,int gi0/0,description Test Description')
+print('int gi0/0,description Test Description,do wr mem')
 print('#######################################')
 print ('')
 print ('')
-file_name=str(input("Please Enter the input CSV file name: "))
+
+
+# Input CSV File Name
+file_name=str(input('Please Enter the input CSV file name: '))
 print('Input CSV file:', file_name)
 print ('')
 print ('')
-# enddef
+
 
 
 #######################################
@@ -117,7 +121,7 @@ print ('')
 
 # Define connection
 def my_connection(hostname, device, ip_addr, username, p, ep):
-    """
+    '''
     Attempts connection to device with NetMiko and handles errors.
     Args:
         device      string - Device type (per NetMiko)
@@ -129,7 +133,7 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
     Returns:
         NetMiko connection handle if successfully connected,
         False if connection fails.
-    """
+    '''
 
     try:
         connection = ConnectHandler(device_type=device, ip=ip_addr,
@@ -137,7 +141,7 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
                                     password=p, secret=ep)
     except NetMikoTimeoutException:
         # Print to Console
-        print(hostname + " Connection timed out!")
+        print(hostname + ' Connection timed out!')
 
         path = os.getcwd()
         # Write to Error Log
@@ -151,7 +155,7 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
 
     except NetMikoAuthenticationException:
         # Print to Console
-        print(hostname + " Authentication failed!")
+        print(hostname + ' Authentication failed!')
 
         path = os.getcwd()
         # Write to Error Log
@@ -193,7 +197,7 @@ def my_connection(hostname, device, ip_addr, username, p, ep):
 
     except TimeoutError:
         # Print to Console
-        print(hostname + " Other timeout error!")
+        print(hostname + ' Other timeout error!')
 
         path = os.getcwd()
         # Write to Error Log
@@ -230,7 +234,7 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
         output = connection.send_command(command, delay_factor=delay_factor)
     except IOError:
         # Seen when delay not long enough
-        print("send_command(" + command + ") IOError!")
+        print('send_command(' + command + ') IOError!')
 
         path = os.getcwd()
         # Write to Error Log
@@ -247,14 +251,14 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
     if show_prompt and not quiet:
         # Print to Console
         print('\n')
-        print(prompt + " " + command)  # Echo prompt and executed command
+        print(prompt + ' ' + command)  # Echo prompt and executed command
 
         path = os.getcwd()
         # Write to invididual log
         file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
         f=open(file_name, 'a')
         f.write('\n')
-        f.write(prompt + " " + command)
+        f.write(prompt + ' ' + command)
         f.write('\n')
         f.close()
 
@@ -262,7 +266,7 @@ def run_cmd(command, prompt, connection, hostname, quiet=False, show_prompt=True
         file_log = os.path.join(path, "Log", "log.txt")
         f=open(file_log, 'a')
         f.write('\n')
-        f.write(prompt + " " + command)
+        f.write(prompt + ' ' + command)
         f.write('\n')
         f.close()
     # endif
@@ -324,30 +328,6 @@ def run_en_cmds(command, prompt, connection, hostname, quiet=False, show_prompt=
 
         return  # Skip additional output.
     # endtry
-
-#    if show_prompt and not quiet:
-#        # Print to Console
-#        print('\n')
-#        print(prompt + " " + command)  # Echo prompt and executed command
-#
-#        path = os.getcwd()
-#        # Write to invididual log
-#        file_name = os.path.join(path, "OutputConfigurations", hostname+".txt")
-#        f=open(file_name, 'a')
-#        f.write('\n')
-#        f.write(prompt + " " + command)
-#        f.write('\n')
-#        f.close()
-#
-#        # Write to Log
-#        file_log = os.path.join(path, "Log", "log.txt")
-#        f=open(file_log, 'a')
-#        f.write('\n')
-#        f.write(prompt + " " + command)
-#        f.write('\n')
-#        f.close()
-
-    # endif
 
     if not quiet:
         # Print to Console
@@ -422,13 +402,12 @@ def read_csv_file():
             if not net_connect:
                 continue # Skip this node due to connection issues.
             prompt = net_connect.find_prompt()
+
+            # Run Priviledged Exec Commands
             for command in commands:
                 run_cmd(command, prompt, net_connect, hostname)
-            # for command in global_config_commands:
-            #     run_en_cmds(command, prompt, net_connect, hostname)
-            # for command in global_config_commands:
-            # test_cmds = ['do show ip int br','do show ver | in image','do show ver | in system','do wr mem']
-            # run_en_cmds(test_cmds, prompt, net_connect, hostname)
+
+            # Run Global Commands in order and then exit to Priviledged Exec
             run_en_cmds(global_config_commands, prompt, net_connect, hostname)
             net_connect.disconnect()
 
@@ -454,7 +433,7 @@ def main():
     end_time = datetime.now()
     total_time = end_time - start_time
 
-    print("The Total Elapsed Time is:")
+    print('The Total Elapsed Time is:')
     print(total_time)
     exit()
 
